@@ -4,8 +4,8 @@
 #include "Bit.hpp"
 #include "EvalBit.hpp"
 
-#include <cstddef>     // portable size_t
-#include <functional>  // function
+#include <cstddef>    // portable size_t
+#include <functional> // function
 #include <string>
 #include <vector>
 

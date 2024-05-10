@@ -2,11 +2,12 @@
 #include "Grid.hpp"
 
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
 
 int main() {
+  // this lambda defines a boolean output by its bits
   BooleanFunctor out1 = [](BitVector bits){
     Grid<int, int> grid(3, 3);
     for (size_t i = 0; i < bits.size(); ++i) {
@@ -31,6 +32,9 @@ int main() {
       grid.sumSequence({2,1}, {-1,1}) <= 1
     );
   };
+
+  // defines how each row from a truth table is to be called
+  // uses X11, X12, X13, X21, ...
   TokenFunctor cellNames = [](size_t index, TokenType type){
     std::stringstream ss;
     switch (type) {
@@ -47,6 +51,9 @@ int main() {
     }
     return ss.str();
   };
+
+  // defines how each row from a truth table is to be called
+  // uses A, B, C, D, ...
   TokenFunctor letterNames = [](size_t index, TokenType type){
     std::stringstream ss;
     switch (type) {
@@ -63,6 +70,7 @@ int main() {
     }
     return ss.str();
   };
+
   BoolFunction bf(9, out1);
 
   StringTable truthTable = bf.getTruthTable();

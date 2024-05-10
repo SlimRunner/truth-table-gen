@@ -3,7 +3,7 @@
 
 #include "Bit.hpp"
 
-#include <functional>  // function
+#include <functional> // function
 #include <vector>
 
 using BooleanParams = const std::vector<Bit> &;

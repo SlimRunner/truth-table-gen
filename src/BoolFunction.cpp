@@ -1,11 +1,9 @@
 #include "BoolFunction.hpp"
 
 #include <array>
-#include <cstdarg>
+#include <cstdarg> // portable size_t
 #include <iomanip>
-#include <map>
 #include <sstream>
-#include <utility>
 
 std::string defaultNames(size_t index, TokenType type) {
   constexpr std::array<char, 2> OPTS = {'X', 'Y'};
@@ -26,7 +24,7 @@ BoolFunction::BoolFunction(
 ) : mIns{}, mOuts{} {
   for (size_t i = 0; i < inputs; ++i) {
     Bit bit(false);
-    mIns.push_back(std::move(bit));
+    mIns.push_back(bit);
   }
   mOuts.push_back({output});
 }
