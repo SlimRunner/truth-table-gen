@@ -48,7 +48,48 @@ BoolFunction::BoolFunction(
   }
 }
 
-std::string BoolFunction::getTruthTable() {
+void BoolFunction::renameTokens(TokenFunctor namer) {
+  for (size_t i = 0; i < mIns.size(); ++i) {
+    mIns.at(i).rename(namer(i, TokenType::INPUT));
+  }
+}
+
+StringTable BoolFunction::getTruthTable() {
+  StringTable result;
+  const size_t IN_COUNT = mIns.size();
+  const size_t B_MAX = 1U << IN_COUNT;
+  size_t offset;
+
+  auto parseBit = [](bool x) { return x ? "1" : "0"; };
+
+  result.push_back({});
+  for (const auto &bit : mIns) {
+    result.back().push_back(bit.name());
+  }
+  result.back().push_back("");
+  for (const auto &bit : mOuts) {
+    result.back().push_back(bit.name());
+  }
+
+  for (size_t i = 0U; i < B_MAX; ++i) {
+    result.push_back({});
+    offset = i;
+    for (auto &&bit : mIns) {
+      bit.set(offset & 1U);
+      result.back().push_back(parseBit(bit.get()));
+      offset >>= 1U;
+    }
+
+    result.back().push_back("");
+    for (auto &&bit : mOuts) {
+      result.back().push_back(parseBit(bit.get(mIns)));
+    }
+  }
+
+  return result;
+}
+
+std::string BoolFunction::getLogisimTT() {
   const size_t IN_COUNT = mIns.size();
   const size_t B_MAX = 1U << IN_COUNT;
   std::stringstream result;
@@ -84,6 +125,23 @@ std::string BoolFunction::getTruthTable() {
     for (auto &&bit : mOuts) {
       result << std::setw(COL_SIZE);
       result << bit.get(mIns);
+    }
+    result << "\n";
+  }
+
+  return result.str();
+}
+
+std::string BoolFunction::getCSVTT() {
+  StringTable table = getTruthTable();
+  std::stringstream result;
+
+  bool needComma = false;
+  for (auto const & row: table) {
+    needComma = false;
+    for (auto const & cell: row) {
+      result << (needComma ? "," : "") << cell;
+      needComma = true;
     }
     result << "\n";
   }

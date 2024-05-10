@@ -16,9 +16,11 @@ public:
   inline void flip() { mBit = !mBit; }
   inline void makeFalse() { mBit = false; }
   inline void set(bool value) { mBit = value; }
+  inline void rename(std::string name) { mToken = name; }
 
   inline bool get() const { return mBit; }
   inline std::string name() const { return mToken; }
+
 };
 
 #endif // BIT_H

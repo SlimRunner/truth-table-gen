@@ -15,6 +15,7 @@ enum class TokenType { INPUT, OUTPUT };
 using TokenFunctor = std::function<std::string(size_t index, TokenType type)>;
 using BooleanParams = const std::vector<Bit> &;
 using BooleanFunctor = std::function<bool(BooleanParams bits)>;
+using StringTable = std::vector<std::vector<std::string>>;
 
 class EvalBit {
 private:
@@ -46,7 +47,11 @@ public:
   BoolFunction(size_t inputs, std::vector<BooleanFunctor> outputs);
   BoolFunction(size_t inputs, TokenFunctor namer, std::vector<BooleanFunctor> outputs);
   
-  std::string getTruthTable();
+  void renameTokens(TokenFunctor namer);
+
+  StringTable getTruthTable();
+  std::string getLogisimTT();
+  std::string getCSVTT();
 
   std::string toString() {
     return std::string("asd");
