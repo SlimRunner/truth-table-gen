@@ -50,5 +50,5 @@
 build/**
 
 # output file
-table.txt
-*.out.txt
+out-*.txt
+out-*.csv
