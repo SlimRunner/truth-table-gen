@@ -42,7 +42,7 @@ int main() {
       ss << "X" << (index / 3) + 1 << (index % 3) + 1;
       break;
     case TokenType::OUTPUT:
-      ss << "O" << index;
+      ss << static_cast<char>('F' + index);
       break;
     
     default:
@@ -72,6 +72,25 @@ int main() {
   };
 
   BoolFunction bf(9, out1);
+
+  LLVec terms = bf.getOutputList();
+  auto minterms = BoolFunction::getMinterms(terms, 0);
+  auto maxterms = BoolFunction::getMaxterms(terms, 0);
+
+  // for (const auto & term: terms) {
+  //   std::cout << term << " ";
+  // }
+  // std::cout << std::endl;
+
+  for (const auto & minterm: minterms) {
+    std::cout << minterm << " ";
+  }
+  std::cout << std::endl;
+
+  for (const auto & maxterm: maxterms) {
+    std::cout << maxterm << " ";
+  }
+  std::cout << std::endl;
 
   StringTable truthTable = bf.getTruthTable();
   StringRow lgsmHead = bf.getTableHeaders(cellNames);
