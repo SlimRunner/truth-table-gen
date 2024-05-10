@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdarg>
 #include <iomanip>
+#include <map>
 #include <sstream>
 #include <utility>
 
@@ -20,37 +21,25 @@ void BoolFunction::clearBits() {
   }
 }
 
-BoolFunction::BoolFunction(size_t inputs, BooleanFunctor output)
-    : BoolFunction{inputs, defaultNames, output} {}
-
 BoolFunction::BoolFunction(
-  size_t inputs, TokenFunctor namer, BooleanFunctor output
+  size_t inputs, BooleanFunctor output
 ) : mIns{}, mOuts{} {
   for (size_t i = 0; i < inputs; ++i) {
-    Bit bit(namer(i, TokenType::INPUT), false);
+    Bit bit(false);
     mIns.push_back(std::move(bit));
   }
-  mOuts.push_back({namer(0, TokenType::OUTPUT), output});
+  mOuts.push_back({output});
 }
 
-BoolFunction::BoolFunction(size_t inputs, std::vector<BooleanFunctor> outputs)
-    : BoolFunction{inputs, defaultNames, outputs} {}
-
 BoolFunction::BoolFunction(
-  size_t inputs, TokenFunctor namer, std::vector<BooleanFunctor> outputs
+  size_t inputs, std::vector<BooleanFunctor> outputs
 ) : mIns{}, mOuts{} {
   for (size_t i = 0; i < inputs; ++i) {
-    Bit bit(namer(i, TokenType::INPUT), false);
+    Bit bit(false);
     mIns.push_back(bit);
   }
   for (auto && bit: outputs) {
-    mOuts.push_back({namer(mOuts.size(), TokenType::OUTPUT), bit});
-  }
-}
-
-void BoolFunction::renameTokens(TokenFunctor namer) {
-  for (size_t i = 0; i < mIns.size(); ++i) {
-    mIns.at(i).rename(namer(i, TokenType::INPUT));
+    mOuts.push_back({bit});
   }
 }
 
@@ -61,15 +50,6 @@ StringTable BoolFunction::getTruthTable() {
   size_t offset;
 
   auto parseBit = [](bool x) { return x ? "1" : "0"; };
-
-  result.push_back({});
-  for (const auto &bit : mIns) {
-    result.back().push_back(bit.name());
-  }
-  result.back().push_back("");
-  for (const auto &bit : mOuts) {
-    result.back().push_back(bit.name());
-  }
 
   for (size_t i = 0U; i < B_MAX; ++i) {
     result.push_back({});
@@ -89,42 +69,54 @@ StringTable BoolFunction::getTruthTable() {
   return result;
 }
 
-std::string BoolFunction::getLogisimTT() {
-  const size_t IN_COUNT = mIns.size();
-  const size_t B_MAX = 1U << IN_COUNT;
+StringRow BoolFunction::getTableHeaders(TokenFunctor namer) {
+  StringRow result;
+
+  for (size_t i = 0; i < mIns.size(); ++i) {
+    result.push_back(namer(i, TokenType::INPUT));
+  }
+
+  result.push_back("");
+
+  for (size_t i = 0; i < mOuts.size(); ++i) {
+    result.push_back(namer(i, TokenType::OUTPUT));
+  }
+
+  return result;
+}
+
+std::string BoolFunction::getLogisimTT(
+  const StringRow & header, const StringTable & table
+) {
+  using ssvec = std::vector<std::streamsize>;
   std::stringstream result;
-  size_t offset;
+  ssvec colSizes;
+  ssvec::const_iterator colSizeIt;
 
-  constexpr size_t COL_SIZE = 4;
   result << std::left;
-  for (const auto &bit : mIns) {
-    result << std::setw(COL_SIZE);
-    result << bit.name();
-  }
-  result << std::setw(COL_SIZE);
-  result << "|";
-  for (const auto &bit : mOuts) {
-    result << std::setw(COL_SIZE);
-    result << bit.name();
-  }
 
-  result << "\n";
-  result << std::string(result.str().length(),'~');
-  result << "\n";
-
-  for (size_t i = 0U; i < B_MAX; ++i) {
-    offset = i;
-    for (auto &&bit : mIns) {
-      bit.set(offset & 1U);
-      result << std::setw(COL_SIZE);
-      result << bit.get();
-      offset >>= 1U;
+  for (auto const & cell: header) {
+    if (cell.size() > 0) {
+      colSizes.push_back(static_cast<int>(cell.size() + 1U));
+      result << std::setw(colSizes.back()) << cell;
+    } else {
+      colSizes.push_back(2);
+      result << std::setw(colSizes.back()) << "| ";
     }
-    result << std::setw(COL_SIZE);
-    result << "|";
-    for (auto &&bit : mOuts) {
-      result << std::setw(COL_SIZE);
-      result << bit.get(mIns);
+  }
+
+  result << "\n" << std::string(result.str().length(),'~') << "\n";
+
+  const auto colSizeStart = colSizes.cbegin();
+
+  for (auto const & row: table) {
+    colSizeIt = colSizeStart;
+    for (auto const & cell: row) {
+      if (cell.size() > 0) {
+        result << std::setw(*(colSizeIt++)) << cell;
+      } else {
+        result << std::setw(*(colSizeIt++)) << "|";
+      }
     }
     result << "\n";
   }
@@ -132,11 +124,20 @@ std::string BoolFunction::getLogisimTT() {
   return result.str();
 }
 
-std::string BoolFunction::getCSVTT() {
-  StringTable table = getTruthTable();
+std::string BoolFunction::getCSVTT(
+  const StringRow & header, const StringTable & table
+) {
   std::stringstream result;
-
   bool needComma = false;
+
+  needComma = false;
+  for (auto const & cell: header) {
+    result << (needComma ? "," : "") << cell;
+    needComma = true;
+  }
+  result << "\n";
+
+  needComma = false;
   for (auto const & row: table) {
     needComma = false;
     for (auto const & cell: row) {

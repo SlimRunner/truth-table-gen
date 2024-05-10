@@ -2,60 +2,39 @@
 #define BOOL_FUNCTION_H
 
 #include "Bit.hpp"
+#include "EvalBit.hpp"
 
 #include <cstddef>     // portable size_t
 #include <functional>  // function
-#include <type_traits> // false_type, true_type
-#include <map>
+#include <string>
 #include <vector>
 
 enum class TokenType { INPUT, OUTPUT };
 
 // allows custom initialization for input or output names
 using TokenFunctor = std::function<std::string(size_t index, TokenType type)>;
-using BooleanParams = const std::vector<Bit> &;
-using BooleanFunctor = std::function<bool(BooleanParams bits)>;
-using StringTable = std::vector<std::vector<std::string>>;
-
-class EvalBit {
-private:
-  std::string mToken;
-  BooleanFunctor mFunc;
-public:
-  EvalBit() = delete;
-  EvalBit(std::string name, BooleanFunctor func) : mToken{name}, mFunc{func} {}
-  inline bool get(BooleanParams bits) const { return mFunc(bits); }
-  inline std::string name() const { return mToken; }
-};
-
+using StringRow = std::vector<std::string>;
+using StringTable = std::vector<StringRow>;
 using BitVector = std::vector<Bit>;
 using FuncVector = std::vector<EvalBit>;
-
 
 class BoolFunction {
 private:
   BitVector mIns;
   FuncVector mOuts;
-  std::map<std::string ,size_t> mWidth;
 
   void clearBits();
 
 public:
   BoolFunction() = delete;
   BoolFunction(size_t inputs, BooleanFunctor output);
-  BoolFunction(size_t inputs, TokenFunctor namer, BooleanFunctor output);
   BoolFunction(size_t inputs, std::vector<BooleanFunctor> outputs);
-  BoolFunction(size_t inputs, TokenFunctor namer, std::vector<BooleanFunctor> outputs);
-  
-  void renameTokens(TokenFunctor namer);
 
   StringTable getTruthTable();
-  std::string getLogisimTT();
-  std::string getCSVTT();
+  StringRow getTableHeaders(TokenFunctor namer);
 
-  std::string toString() {
-    return std::string("asd");
-  }
+  static std::string getLogisimTT(const StringRow & header, const StringTable & table);
+  static std::string getCSVTT(const StringRow & header, const StringTable & table);
 };
 
 #endif // BOOL_FUNCTION_H

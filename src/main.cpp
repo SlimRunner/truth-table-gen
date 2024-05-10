@@ -63,12 +63,17 @@ int main() {
     }
     return ss.str();
   };
-  BoolFunction bf(9, cellNames, out1);
+  BoolFunction bf(9, out1);
 
-  // std::ofstream outfile("out-table.csv", std::ios_base::trunc);
-  // outfile << bf.getLogisimTT();
+  StringTable truthTable = bf.getTruthTable();
+  StringRow lgsmHead = bf.getTableHeaders(cellNames);
+  StringRow lgfrHead = bf.getTableHeaders(letterNames);
 
-  bf.renameTokens(letterNames);
-  std::ofstream outfile("out-table.csv", std::ios_base::trunc);
-  outfile << bf.getCSVTT();
+  std::ofstream textfile("out-table.txt", std::ios_base::trunc);
+  textfile << BoolFunction::getLogisimTT(lgsmHead, truthTable);
+  textfile.close();
+
+  std::ofstream csvfile("out-table.csv", std::ios_base::trunc);
+  csvfile << BoolFunction::getCSVTT(lgfrHead, truthTable);
+  csvfile.close();
 }
