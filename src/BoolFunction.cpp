@@ -6,14 +6,6 @@
 #include <sstream>
 #include <string_view>
 
-std::string defaultNames(size_t index, TokenType type) {
-  constexpr std::array<char, 2> OPTS = {'X', 'Y'};
-  std::stringstream token;
-  char letter = OPTS.at(static_cast<size_t>(type));
-  token << letter << index;
-  return token.str();
-}
-
 void BoolFunction::clearBits() {
   for (auto &&bit : mIns) {
     bit.makeFalse();
@@ -263,4 +255,13 @@ std::string BoolFunction::getCNF(MaxtermVec maxterms, TokenFunctor namer) {
     firstTerm = false;
   }
   return result.str();
+}
+
+
+std::string BoolFunction::defaultNamer(size_t index, TokenType type) {
+  constexpr std::array<char, 2> OPTS = {'X', 'Y'};
+  std::stringstream token;
+  char letter = OPTS.at(static_cast<size_t>(type));
+  token << letter << index;
+  return token.str();
 }

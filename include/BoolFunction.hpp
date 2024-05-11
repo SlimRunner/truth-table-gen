@@ -60,6 +60,8 @@ public:
   static MaxtermVec getMaxterms(const LLVec &terms, size_t inputSize, size_t nthOut);
   static std::string getDNF(MintermVec minterms, TokenFunctor namer);
   static std::string getCNF(MaxtermVec maxterms, TokenFunctor namer);
+
+  static std::string defaultNamer(size_t index, TokenType type);
 };
 
 #endif // BOOL_FUNCTION_H
