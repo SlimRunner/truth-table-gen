@@ -150,7 +150,8 @@ std::string BoolFunction::getLogisimTT(
     }
   }
 
-  result << "\n" << std::string(result.str().length(),'~') << "\n";
+  const auto SEPARATOR_LEN = result.str().length();
+  result << "\n" << std::string(SEPARATOR_LEN, '~') << "\n";
 
   const auto colSizeStart = colSizes.cbegin();
 
