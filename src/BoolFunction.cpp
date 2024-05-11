@@ -14,7 +14,7 @@ void BoolFunction::clearBits() {
 
 BoolFunction::BoolFunction(
   size_t inputs, BooleanFunctor output
-) : mIns{}, mOuts{} {
+) : mIns{}, mOuts{}, mflipMSB{false} {
   for (size_t i = 0; i < inputs; ++i) {
     Bit bit(false);
     mIns.push_back(bit);
@@ -24,7 +24,7 @@ BoolFunction::BoolFunction(
 
 BoolFunction::BoolFunction(
   size_t inputs, std::vector<BooleanFunctor> outputs
-) : mIns{}, mOuts{} {
+) : mIns{}, mOuts{}, mflipMSB{false} {
   for (size_t i = 0; i < inputs; ++i) {
     Bit bit(false);
     mIns.push_back(bit);
@@ -40,6 +40,11 @@ size_t BoolFunction::getInputSize() const {
 
 size_t BoolFunction::getOutputSize() const {
   return mOuts.size();
+}
+
+bool BoolFunction::invertMSB() {
+  mflipMSB = !mflipMSB;
+  return mflipMSB;
 }
 
 LLVec BoolFunction::getOutputList() {
@@ -70,17 +75,34 @@ StringTable BoolFunction::getTruthTable() {
   StringTable result;
   const size_t IN_COUNT = mIns.size();
   const size_t B_MAX = 1U << IN_COUNT;
-  size_t offset;
+  size_t offset, mask;
+
+  switch (mflipMSB) {
+  case true:
+    mask = B_MAX >> 1;
+    break;
+  case false:
+    mask = 0x1;
+    break;
+  }
 
   auto parseBit = [](bool x) { return x ? "1" : "0"; };
 
   for (size_t i = 0U; i < B_MAX; ++i) {
     result.push_back({});
     offset = i;
+
     for (auto &&bit : mIns) {
-      bit.set(offset & 1U);
+      bit.set(offset & mask);
       result.back().push_back(parseBit(bit.get()));
-      offset >>= 1U;
+      switch (mflipMSB) {
+      case true:
+        offset <<= 1U;
+        break;
+      case false:
+        offset >>= 1U;
+        break;
+      }
     }
 
     result.back().push_back("");

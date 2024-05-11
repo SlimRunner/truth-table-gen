@@ -39,6 +39,7 @@ class BoolFunction {
 private:
   BitVector mIns;
   FuncVector mOuts;
+  bool mflipMSB;
 
   void clearBits();
 
@@ -49,6 +50,7 @@ public:
 
   size_t getInputSize() const;
   size_t getOutputSize() const;
+  bool invertMSB();
 
   LLVec getOutputList();
   StringTable getTruthTable();
