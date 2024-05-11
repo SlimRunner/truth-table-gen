@@ -6,8 +6,47 @@
 #include <iostream>
 #include <sstream>
 
+void lonelyQueen();
+void gateTester(BooleanFunctor func);
+
+std::string letterNames(size_t index, TokenType type);
+std::string cellNames(size_t index, TokenType type);
+
 int main() {
-  // this lambda defines a boolean output by its bits
+  // auto AND2 = [](BitVector bits) -> bool {
+  //   return bits.at(0).get() && bits.at(1).get();
+  // };
+  // auto OR2 = [](BitVector bits) -> bool {
+  //   return bits.at(0).get() || bits.at(1).get();
+  // };
+  // auto NAND2 = [](BitVector bits) -> bool {
+  //   const auto a = bits.at(0).get();
+  //   const auto b = bits.at(1).get();
+  //   return !(a && b);
+  // };
+  auto GATE = [](BitVector bits) -> bool {
+    const auto a = bits.at(0).get();
+    const auto b = bits.at(1).get();
+    return !(!a && !b);
+  };
+  gateTester(GATE);
+  return 0;
+}
+
+void gateTester(BooleanFunctor func) {
+  BoolFunction bf(2, func);
+  bf.invertMSB();
+  auto table = bf.getTruthTable();
+  auto headers = bf.getTableHeaders(letterNames);
+
+  std::cout << BoolFunction::getLogisimTT(headers, table);
+  // std::ofstream csvfile("out-nand.csv", std::ios_base::trunc);
+  // csvfile << BoolFunction::getCSVTT(headers, table);
+  // csvfile.close();
+}
+
+void lonelyQueen() {
+    // this lambda defines a boolean output by its bits
   BooleanFunctor out1 = [](BitVector bits){
     Grid<int, int> grid(3, 3);
     for (size_t i = 0; i < bits.size(); ++i) {
@@ -33,52 +72,14 @@ int main() {
     );
   };
 
-  // defines how each row from a truth table is to be called
-  // uses X11, X12, X13, X21, ...
-  TokenFunctor cellNames = [](size_t index, TokenType type){
-    std::stringstream ss;
-    switch (type) {
-    case TokenType::INPUT:
-      ss << "X" << (index / 3) + 1 << (index % 3) + 1;
-      break;
-    case TokenType::OUTPUT:
-      ss << static_cast<char>('F' + index);
-      break;
-    
-    default:
-      ss << "W";
-      break;
-    }
-    return ss.str();
-  };
-
-  // defines how each row from a truth table is to be called
-  // uses A, B, C, D, ...
-  TokenFunctor letterNames = [](size_t index, TokenType type){
-    std::stringstream ss;
-    switch (type) {
-    case TokenType::INPUT:
-      ss << static_cast<char>('A' + index);
-      break;
-    case TokenType::OUTPUT:
-      ss << "F" << index;
-      break;
-    
-    default:
-      ss << "W";
-      break;
-    }
-    return ss.str();
-  };
-
   BoolFunction bf(9, out1);
 
   LLVec terms = bf.getOutputList();
   auto minterms = BoolFunction::getMinterms(terms, bf.getInputSize(), 0);
   auto maxterms = BoolFunction::getMaxterms(terms, bf.getInputSize(), 0);
 
-  std::cout << BoolFunction::getDNF(minterms, cellNames) << std::endl;
-  std::cout << BoolFunction::getCNF(maxterms, cellNames) << std::endl;
+  std::cout << BoolFunction::getDNF(minterms, letterNames) << std::endl;
+  std::cout << BoolFunction::getCNF(maxterms, letterNames) << std::endl;
 
   StringTable truthTable = bf.getTruthTable();
   StringRow lgsmHead = bf.getTableHeaders(cellNames);
@@ -91,4 +92,38 @@ int main() {
   std::ofstream csvfile("out-table.csv", std::ios_base::trunc);
   csvfile << BoolFunction::getCSVTT(lgfrHead, truthTable);
   csvfile.close();
+}
+
+std::string letterNames(size_t index, TokenType type) {
+  std::stringstream ss;
+  switch (type) {
+  case TokenType::INPUT:
+    ss << static_cast<char>('A' + index);
+    break;
+  case TokenType::OUTPUT:
+    ss << "F" << index;
+    break;
+  
+  default:
+    ss << "W";
+    break;
+  }
+  return ss.str();
+}
+
+std::string cellNames(size_t index, TokenType type) {
+  std::stringstream ss;
+  switch (type) {
+  case TokenType::INPUT:
+    ss << "X" << (index / 3) + 1 << (index % 3) + 1;
+    break;
+  case TokenType::OUTPUT:
+    ss << static_cast<char>('F' + index);
+    break;
+  
+  default:
+    ss << "W";
+    break;
+  }
+  return ss.str();
 }
