@@ -20,6 +20,21 @@ using FuncVector = std::vector<EvalBit>;
 using ULL = unsigned long long;
 using LLVec = std::vector<ULL>;
 
+struct MintermTag {};
+struct MaxtermTag {};
+
+template <class Tag>
+class TaggedTerms: public std::vector<ULL> {
+private:
+  size_t mRank;
+public:
+  TaggedTerms(size_t rank) : mRank {rank} {}
+  inline size_t rank() { return mRank; }
+};
+
+using MintermVec = TaggedTerms<MintermTag>;
+using MaxtermVec = TaggedTerms<MaxtermTag>;
+
 class BoolFunction {
 private:
   BitVector mIns;
@@ -41,8 +56,10 @@ public:
 
   static std::string getLogisimTT(const StringRow & header, const StringTable & table);
   static std::string getCSVTT(const StringRow & header, const StringTable & table);
-  static LLVec getMinterms(const LLVec &terms, size_t nthOut);
-  static LLVec getMaxterms(const LLVec &terms, size_t nthOut);
+  static MintermVec getMinterms(const LLVec &terms, size_t inputSize, size_t nthOut);
+  static MaxtermVec getMaxterms(const LLVec &terms, size_t inputSize, size_t nthOut);
+  static std::string getDNF(MintermVec minterms, TokenFunctor namer);
+  static std::string getCNF(MaxtermVec maxterms, TokenFunctor namer);
 };
 
 #endif // BOOL_FUNCTION_H

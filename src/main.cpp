@@ -74,23 +74,11 @@ int main() {
   BoolFunction bf(9, out1);
 
   LLVec terms = bf.getOutputList();
-  auto minterms = BoolFunction::getMinterms(terms, 0);
-  auto maxterms = BoolFunction::getMaxterms(terms, 0);
+  auto minterms = BoolFunction::getMinterms(terms, bf.getInputSize(), 0);
+  auto maxterms = BoolFunction::getMaxterms(terms, bf.getInputSize(), 0);
 
-  // for (const auto & term: terms) {
-  //   std::cout << term << " ";
-  // }
-  // std::cout << std::endl;
-
-  for (const auto & minterm: minterms) {
-    std::cout << minterm << " ";
-  }
-  std::cout << std::endl;
-
-  for (const auto & maxterm: maxterms) {
-    std::cout << maxterm << " ";
-  }
-  std::cout << std::endl;
+  std::cout << BoolFunction::getDNF(minterms, cellNames) << std::endl;
+  std::cout << BoolFunction::getCNF(maxterms, cellNames) << std::endl;
 
   StringTable truthTable = bf.getTruthTable();
   StringRow lgsmHead = bf.getTableHeaders(cellNames);

@@ -4,6 +4,7 @@
 #include <cstdarg> // portable size_t
 #include <iomanip>
 #include <sstream>
+#include <string_view>
 
 std::string defaultNames(size_t index, TokenType type) {
   constexpr std::array<char, 2> OPTS = {'X', 'Y'};
@@ -180,8 +181,8 @@ std::string BoolFunction::getCSVTT(
   return result.str();
 }
 
-LLVec BoolFunction::getMinterms(const LLVec &terms, size_t nthOut) {
-  LLVec result;
+MintermVec BoolFunction::getMinterms(const LLVec &terms, size_t inputSize, size_t nthOut) {
+  MintermVec result(inputSize);
   for (size_t i = 0; i < terms.size(); ++i) {
     if (auto maxterm = terms[i] & (1U << nthOut); maxterm) {
       result.push_back(i * maxterm);
@@ -190,12 +191,76 @@ LLVec BoolFunction::getMinterms(const LLVec &terms, size_t nthOut) {
   return result;
 }
 
-LLVec BoolFunction::getMaxterms(const LLVec &terms, size_t nthOut) {
-  LLVec result;
+MaxtermVec BoolFunction::getMaxterms(const LLVec &terms, size_t inputSize, size_t nthOut) {
+  MaxtermVec result(inputSize);
   for (size_t i = 0; i < terms.size(); ++i) {
     if (auto maxterm = ~terms[i] & (1U << nthOut); maxterm) {
       result.push_back(i * maxterm);
     }
   }
   return result;
+}
+
+std::string BoolFunction::getDNF(MintermVec minterms, TokenFunctor namer) {
+  std::stringstream result;
+  std::vector<std::vector<std::string>> cheapAST;
+  for (const auto & minterm: minterms) {
+    cheapAST.push_back({});
+    for (size_t i = 0; i < minterms.rank(); ++i) {
+      cheapAST.back().push_back(namer(i, TokenType::INPUT));
+      if (((minterm >> i) & 0x1) == 0) {
+        cheapAST.back().back() = "~" + cheapAST.back().back();
+      }
+    }
+  }
+
+  constexpr std::string_view AND[2] = {" & ", ""};
+  constexpr std::string_view  OR[2] = {" | ", ""};
+
+  bool firstTerm = true;
+  bool firstCoeff = true;
+
+  for (const auto & terms: cheapAST) {
+    result << OR[firstTerm] << "(";
+    firstCoeff = true;
+    for ( const auto & coeff: terms) {
+      result << AND[firstCoeff] << coeff;
+      firstCoeff = false;
+    }
+    result << ")";
+    firstTerm = false;
+  }
+  return result.str();
+}
+
+std::string BoolFunction::getCNF(MaxtermVec maxterms, TokenFunctor namer) {
+  std::stringstream result;
+  std::vector<std::vector<std::string>> cheapAST;
+  for (const auto & maxterm: maxterms) {
+    cheapAST.push_back({});
+    for (size_t i = 0; i < maxterms.rank(); ++i) {
+      cheapAST.back().push_back(namer(i, TokenType::INPUT));
+      if (((maxterm >> i) & 0x1) == 1) {
+        cheapAST.back().back() = "~" + cheapAST.back().back();
+      }
+    }
+  }
+
+  constexpr std::string_view AND[2] = {" & ", ""};
+  constexpr std::string_view  OR[2] = {" | ", ""};
+
+  bool firstTerm = true;
+  bool firstCoeff = true;
+
+  for (const auto & terms: cheapAST) {
+    result << AND[firstTerm] << "(";
+    firstCoeff = true;
+    for ( const auto & coeff: terms) {
+      result << OR[firstCoeff] << coeff;
+      firstCoeff = false;
+    }
+    result << ")";
+    firstTerm = false;
+  }
+  return result.str();
 }
